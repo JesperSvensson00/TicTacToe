@@ -150,7 +150,22 @@ function onMove(socket, data) {
     socket.emit("errorMsg", "You are not playing!");
   }
   //Checks if somwone has won
-  console.log('\x1b[36m%s\x1b[0m', checkWon() + " has won!");
+  if (checkWon() == "blue") {
+    console.log("\x1b[34m", "Blue won!");
+    socket.emit("gameOver", "blue");
+    console.log("\x1b[0m", "");
+    restart();
+  } else if (checkWon() == "red") {
+    console.log("\x1b[31m", "Red won!");
+    socket.emit("gameOver", "red");
+    console.log("\x1b[0m", "");
+    restart();
+  } else if (checkWon() == "gameOver") {
+    console.log("\x1b[31m", "Game over!");
+    socket.emit("gameOver", "none");
+    console.log("\x1b[0m", "");
+    restart();
+  }
 }
 
 function checkWon() {
@@ -223,6 +238,18 @@ function checkWon() {
     } else if (lastCell == 1) {
       return "red";
     }
+  }
+
+  let gameOver = true;
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 1; j < board[i].length; j++) {
+      if (board[i][j] == -1) {
+        gameOver = false;
+      }
+    }
+  }
+  if (gameOver) {
+    return "gameOver";
   }
 
   //If noone has won

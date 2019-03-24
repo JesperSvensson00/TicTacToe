@@ -193,6 +193,38 @@ function checkWon() {
     }
   }
 
+  let diagSame = true;
+  let lastCell = board[0][0];
+  for (let i = 1; i < board.length; i++) {
+    if (lastCell != board[i][i]) {
+      diagSame = false;
+    }
+    lastCell == board[i][i];
+  }
+  if (diagSame) {
+    if (lastCell == 0) {
+      return "blue";
+    } else if (lastCell == 1) {
+      return "red";
+    }
+  }
+
+  diagSame = true;
+  lastCell = board[0][2];
+  for (let i = 1; i < board.length; i++) {
+    if (lastCell != board[i][2 - i]) {
+      diagSame = false;
+    }
+    lastCell == board[i][2 - i];
+  }
+  if (diagSame) {
+    if (lastCell == 0) {
+      return "blue";
+    } else if (lastCell == 1) {
+      return "red";
+    }
+  }
+
   //If noone has won
   return "none";
 }

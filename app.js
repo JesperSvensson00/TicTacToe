@@ -4,8 +4,6 @@ var serv = require("http").Server(app);
 
 var defaulUserNames = ["Ko", "Gris", "Katt", "Hund", "Häst", "Duva", "Varg", "Ren", "Groda", "Räv", "Utter", "Älg", "Järv", "Mus", "Björn", "Hjort", "Bäver", "Ekorre"];
 
-console.log("#####" + defaulUserNames.length);
-
 //Starts the server
 app.get("/", function (req, res) {
   res.sendFile(__dirname + "/client/index.html");
@@ -43,11 +41,15 @@ io.sockets.on("connection", function (socket) {
     if (PLAYER_LIST.length == 1) {
       socket.color = "blue";
     } else if (PLAYER_LIST.length == 2) {
-      socket.color = "red";
+      if (SOCKET_LIST[PLAYER_LIST[0]].color == "blue") {
+        socket.color = "red";
+      } else {
+        socket.color = "blue";
+      }
+
     }
   }
   console.log(PLAYER_LIST);
-  console.log(PLAYER_LIST.length);
   //Prints to the console
   console.log("Player " + socket.id + " joined");
 
@@ -56,6 +58,7 @@ io.sockets.on("connection", function (socket) {
     delete SOCKET_LIST[socket.id];
     let index = PLAYER_LIST.indexOf(socket.id);
     PLAYER_LIST.splice(index, 1);
+    moveClient();
     console.log("Player " + socket.id + " disconnected!");
   });
 
@@ -91,7 +94,7 @@ io.sockets.on("connection", function (socket) {
     if (data.length > 0) {
       socket.name = data;
     } else {
-      let index = Math.floor(Math.random()*18);
+      let index = Math.floor(Math.random() * 18);
       socket.name = defaulUserNames[index];
     }
   });
@@ -152,80 +155,43 @@ function onMove(socket, data) {
 
 function checkWon() {
   //Checks if someone has won
-  console.log(board);
-  //Checks cols
   for (let i = 0; i < board.length; i++) {
     let colSame = true;
-    for (let j = 0; j < board[i].length - 1; j++) {
-      console.log(i + ", " + j);
-      console.log('\x1b[36m%s\x1b[0m', board[i][0] + " & " + board[i][1] + " & " + board[i][2]);
-      if (board[i][j] != board[i][j + 1 && board[i][j] != -1]) {
+    let lastCell = board[i][0];
+    for (let j = 1; j < board[i].length; j++) {
+      if (lastCell != board[i][j]) {
         colSame = false;
       }
+      lastCell == board[i][j];
     }
     if (colSame) {
-      if (board[0][i] == 0) {
-        return "blue | ";
-      } else if (board[0][i] == 1) {
+      if (lastCell == 0) {
+        return "blue";
+      } else if (lastCell == 1) {
         return "red";
       }
     }
   }
 
   //Checks rows
-  for (let i = 0; i < board[0].length; i++) {
-    let rowSame = true;
-    for (let j = 0; j < board.length - 1; j++) {
-      if (board[j][i] != board[j + 1][i] && board[j][i] != -1) {
-        rowSame = false;
+  let Tboard = transformMatrix(board);
+  for (let i = 0; i < Tboard.length; i++) {
+    let colSame = true;
+    let lastCell = Tboard[i][0];
+    for (let j = 1; j < Tboard[i].length; j++) {
+      if (lastCell != Tboard[i][j]) {
+        colSame = false;
       }
+      lastCell == Tboard[i][j];
     }
-    if (rowSame) {
-      if (board[1][i] == 0) {
-        return "blue - ";
-      } else if (board[1][i] == 1) {
+    if (colSame) {
+      if (lastCell == 0) {
+        return "blue";
+      } else if (lastCell == 1) {
         return "red";
       }
     }
   }
-
-  //Checks diagonal
-  let diagSame = true;
-  //Checks \
-  for (let i = 0; i < board.length - 1; i++) {
-    if (board[i][i] != board[i + 1][i + 1] && board[i][i] != -1) {
-      diagSame = false;
-    }
-  }
-
-  if (diagSame) {
-    if (board[1][1] == 0) { //Hard coded
-      return "blue /";
-    } else if (board[1][1] == 1) {
-      return "red";
-    }
-  }
-
-  //Checks / --- Hard coded
-  if (board[2][0] == board[1][1] && board[1][1] == board[0][2]) {
-    if (board[1][1] == 0) { //Hard coded
-      return "blue /";
-    } else if (board[1][1] == 1) {
-      return "red";
-    }
-  }
-  //  for (let i = 0; i < board.length - 1; i++) {
-  //    if (board[(i - 2) * -1][i] != board[(i + 1 - 2) * -1][i + 1] && board[(i + 1 - 2) * -1][i] != -1) {
-  //      diagSame = false;
-  //    }
-  //  }
-  //  if (diagSame) {
-  //    if (board[1][1] == 0) { //Hard coded
-  //      return "blue -";
-  //    } else if (board[1][1] == 1) {
-  //      return "red";
-  //    }
-  //  }
 
   //If noone has won
   return "none";
@@ -249,4 +215,36 @@ function restart() {
     socket.emit("restart");
   }
   console.log("Restarted");
+}
+
+function transformMatrix(TwoDArray) {
+  let newMatrix = [];
+  for (let i = 0; i < TwoDArray.length; i++) {
+    newMatrix[i] = [];
+    for (let j = 0; j < TwoDArray.length; j++) {
+      newMatrix[i][j] = 0;
+    }
+  }
+  for (let i = 0; i < TwoDArray.length; i++) {
+    for (let j = 0; j < TwoDArray[0].length; j++) {
+      newMatrix[i][j] = TwoDArray[j][i];
+    }
+  }
+  return newMatrix;
+}
+
+function moveClient() {
+  if (PLAYER_LIST.length < 2) {
+    for (let i in SOCKET_LIST) {
+      let socket = SOCKET_LIST[i];
+      if (socket.id != PLAYER_LIST[0]) {
+        PLAYER_LIST.push(socket.id);
+        if (SOCKET_LIST[PLAYER_LIST[0]].color == "blue") {
+          socket.color = "red";
+        } else {
+          socket.color = "blue";
+        }
+      }
+    }
+  }
 }

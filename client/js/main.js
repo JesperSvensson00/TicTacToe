@@ -4,6 +4,8 @@ var onlineList = document.getElementById("onlineList");
 
 canvas.addEventListener("mousedown", mouseClicked, false);
 
+drawGrid();
+
 //Setups the connectionhandler
 var socket = io();
 console.log("Connected!");

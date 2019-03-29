@@ -65,3 +65,8 @@ socket.on("restart", function () {
   clearCanvas();
   drawGrid();
 });
+
+//Handles game over event
+socket.on("gameOver", function (data) {
+  printMessage("chatBox", "reg", data + " won!");
+});

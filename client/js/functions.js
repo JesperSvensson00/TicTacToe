@@ -16,7 +16,8 @@ function login() {
   socket.emit("login", name);
   document.getElementById("loginBox").style.display = "none";
   document.getElementById("game").style.display = "block";
-
+  
+  document.title = "TicTacToe - " + name;
   console.log("Logged in with name " + name);
 }
 

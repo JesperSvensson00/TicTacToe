@@ -135,19 +135,25 @@ setInterval(function () {
 
 function onMove(socket, data) {
   //Checks wich color the client has
-  if (socket.color == "blue" && blueTurn) {
-    board[data.x][data.y] = 0;
-    blueTurn = !blueTurn;
-  } else if (socket.color == "red" && !blueTurn) {
-    board[data.x][data.y] = 1;
-    blueTurn = !blueTurn;
-  } else if (socket.color == "blue" && !blueTurn) {
-    socket.emit("errorMsg", "It's not your turn!");
-  } else if (socket.color == "red" && blueTurn) {
-    socket.emit("errorMsg", "It's not your turn!");
+  if(board[data.x][data.y] < 0){
+    if (socket.color == "blue" && blueTurn) {
+      
+        board[data.x][data.y] = 0;
+        blueTurn = !blueTurn;
+    } else if (socket.color == "red" && !blueTurn) {
+      board[data.x][data.y] = 1;
+      blueTurn = !blueTurn;
+    } else if (socket.color == "blue" && !blueTurn) {
+      socket.emit("errorMsg", "It's not your turn!");
+    } else if (socket.color == "red" && blueTurn) {
+      socket.emit("errorMsg", "It's not your turn!");
+    } else {
+      //Send error message
+      socket.emit("errorMsg", "You are not playing!");
+    }
   } else {
     //Send error message
-    socket.emit("errorMsg", "You are not playing!");
+    socket.emit("errorMsg", "You can not select an already selected tile!");
   }
   //Checks if somwone has won
   if (checkWon() == "blue") {
